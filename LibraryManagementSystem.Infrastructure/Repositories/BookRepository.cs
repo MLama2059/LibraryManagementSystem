@@ -12,7 +12,7 @@ namespace LibraryManagementSystem.Infrastructure.Repositories
     {
         public async Task<IEnumerable<Book>> GetAllBooksAsync()
         {
-            return await _context.Books.ToListAsync();
+            return await _context.Books.AsNoTracking().ToListAsync();
         }
 
         public async Task<Book?> GetBookByIdAsync(int id)

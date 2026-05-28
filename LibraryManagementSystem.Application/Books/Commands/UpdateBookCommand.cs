@@ -1,5 +1,4 @@
 ﻿using LibraryManagementSystem.Application.DTOs;
-using LibraryManagementSystem.Domain.Entities;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -7,5 +6,5 @@ using System.Text;
 
 namespace LibraryManagementSystem.Application.Books.Commands
 {
-    public record CreateBookCommand(CreateBookDto dto) : IRequest<int>;
+    public record UpdateBookCommand(int id, UpdateBookDto dto) : IRequest<bool>;
 }

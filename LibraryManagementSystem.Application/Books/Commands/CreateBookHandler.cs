@@ -13,12 +13,12 @@ namespace LibraryManagementSystem.Application.Books.Commands
         {
             var book = new Book
             {
-                Title = request.Title,
-                Author = request.Author,
-                ISBN = request.ISBN,
-                Genre = request.Genre,
-                TotalCopies = request.TotalCopies,
-                AvailableCopies = request.TotalCopies
+                Title = request.dto.Title,
+                Author = request.dto.Author,
+                ISBN = request.dto.ISBN,
+                Genre = request.dto.Genre,
+                TotalCopies = request.dto.TotalCopies,
+                AvailableCopies = request.dto.TotalCopies
             };
 
             await _unitOfWork.Books.AddBookAsync(book);
