@@ -1,4 +1,6 @@
+using FluentValidation;
 using LibraryManagementSystem.Application.Books.Commands;
+using LibraryManagementSystem.Application.Books.Validators;
 using LibraryManagementSystem.Domain.Interfaces;
 using LibraryManagementSystem.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +20,8 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 builder.Services.AddMediatR(config =>
     config.RegisterServicesFromAssembly(typeof(CreateBookCommand).Assembly));
+
+builder.Services.AddValidatorsFromAssembly(typeof(CreateBookCommandValidator).Assembly);
 
 var app = builder.Build();
 

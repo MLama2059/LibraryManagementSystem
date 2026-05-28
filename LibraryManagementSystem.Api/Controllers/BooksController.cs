@@ -1,4 +1,5 @@
-﻿using LibraryManagementSystem.Application.Books.Commands;
+﻿using FluentValidation;
+using LibraryManagementSystem.Application.Books.Commands;
 using LibraryManagementSystem.Application.Books.Queries;
 using LibraryManagementSystem.Application.DTOs;
 using MediatR;
@@ -32,17 +33,33 @@ namespace LibraryManagementSystem.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateBook(CreateBookDto dto)
+        public async Task<IActionResult> CreateBook(CreateBookDto dto, [FromServices] IValidator<CreateBookCommand> _validator)
         {
-            int bookId = await _sender.Send(new CreateBookCommand(dto));
+            var command = new CreateBookCommand(dto);
+
+            var validationResult = await _validator.ValidateAsync(command);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(validationResult.ToDictionary());
+            }
+
+            int bookId = await _sender.Send(command);
 
             return CreatedAtAction(nameof(GetBookById), new { id = bookId }, new { Id = bookId, Message = "Book created successfully." });
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateBook(int id, UpdateBookDto dto)
+        public async Task<IActionResult> UpdateBook(int id, UpdateBookDto dto, [FromServices] IValidator<UpdateBookCommand> _validator)
         {
-            var result = await _sender.Send(new UpdateBookCommand(id, dto));
+            var command = new UpdateBookCommand(id, dto);
+
+            var validationResult = await _validator.ValidateAsync(command);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(validationResult.ToDictionary());
+            }
+
+            var result = await _sender.Send(command );
 
             if (!result)
             {
