@@ -10,6 +10,8 @@ namespace LibraryManagementSystem.Infrastructure.Identity
     {
         public string FullName { get; set; } = string.Empty;
         public decimal AccountBalance { get; set; } = 0.00m;
+        public string? RefreshToken { get; set; }
+        public DateTime RefreshTokenExpiryTime { get; set; }
         public ICollection<Loan> Loans { get; set; } = new List<Loan>();
     }
 }
