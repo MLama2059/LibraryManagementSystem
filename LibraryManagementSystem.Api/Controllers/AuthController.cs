@@ -1,4 +1,5 @@
-﻿using LibraryManagementSystem.Application.DTOs.IdentiyDtos;
+﻿using LibraryManagementSystem.Application.DTOs.IdentityDtos;
+using LibraryManagementSystem.Application.Interfaces;
 using LibraryManagementSystem.Infrastructure.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -12,66 +13,42 @@ namespace LibraryManagementSystem.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AuthController(UserManager<ApplicationUser> _userManager, IConfiguration _configuration) : ControllerBase
+    public class AuthController(IAuthService _authService) : ControllerBase
     {
         [HttpPost("register")]
-        public async Task<IActionResult> Register(RegisterDto dto)
+        public async Task<IActionResult> Register(RegisterRequestDto dto)
         {
-            var userExists = await _userManager.FindByEmailAsync(dto.Email);
-            if (userExists != null)
-            {
-                return BadRequest(new {Message = "Email address is already registered."});
-            }
+            var result = await _authService.RegisterAsync(dto);
 
-            var user = new ApplicationUser
+            if (!result.IsSuccess)
             {
-                UserName = dto.Email,
-                Email = dto.Email,
-                FullName = dto.FullName
-            };
-
-            var result = await _userManager.CreateAsync(user, dto.Password);
-
-            if (!result.Succeeded)
-            {
-                return BadRequest(result.Errors);
+                return BadRequest(new { Errors = result.Errors });
             }
 
             return Ok(new { Message = "User registered successfully." });
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(LoginDto dto)
+        public async Task<IActionResult> Login(LoginRequestDto dto)
         {
-            var user = await _userManager.FindByEmailAsync(dto.Email);
-            if (user != null && await _userManager.CheckPasswordAsync(user, dto.Password))
+            var result = await _authService.LoginAsync(dto);
+            if (!result.IsSuccess)
             {
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id),
-                    new Claim(ClaimTypes.Name, user.Email!),
-                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-                };
-
-                var jwtSettings = _configuration.GetSection("Jwt");
-                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]!));
-
-                var token = new JwtSecurityToken(
-                    issuer: jwtSettings["Issuer"],
-                    audience: jwtSettings["Audience"],
-                    claims: claims,
-                    expires: DateTime.UtcNow.AddMinutes(double.Parse(jwtSettings["ExpiryInMinutes"]!)),
-                    signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
-                );
-
-                return Ok(new
-                {
-                    Token = new JwtSecurityTokenHandler().WriteToken(token),
-                    Expiration = token.ValidTo
-                });
+                return Unauthorized(new { Message = result.Message });
             }
 
-            return Unauthorized(new { Message = "Invalid email or password credentials." });
+            return Ok(result);
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken(TokenRequestDto dto)
+        {
+            var result = await _authService.RefreshTokenAsync(dto);
+            if (!result.IsSuccess)
+            {
+                return Unauthorized(new { Message = result.Message });
+            }
+            return Ok(result);
         }
     }
 }
